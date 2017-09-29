@@ -1,26 +1,26 @@
 {% extends "main.html" %}
 {% block body %}
 <h1>Listeners</h1>
-<table id="listeners_table" class="table">
+<table id="listeners_table" class="table table-responsive">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Uptime</th>
-      <th>Status</th>
-      <th>Actions</th>
+      <th >Name</th>
+      <th >Uptime</th>
+      <th >Status</th>
+      <th >Actions</th>
     </tr>
   </thead>
   <tbody id="listeners_list">
   </tbody>
 </table>
 <h1>Emitters</h1>
-<table id="emitters_table" class="table">
+<table id="emitters_table" class="table table-responsive">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Uptime</th>
-      <th>Status</th>
-      <th>Actions</th>
+      <th >Name</th>
+      <th >Uptime</th>
+      <th >Status</th>
+      <th >Actions</th>
     </tr>
   </thead>
   <tbody id="emitters_list">
@@ -42,17 +42,37 @@
       var data = JSON.parse(event.data);
       if(data.Status == "OK")
       {
-        $("#listeners_list").empty()
-        var listeners = data.Listeners;
-        $.each(listeners, function(i, listener){
-          $("#listeners_list").append("<tr><td>" + listener.name + "</td><td>" + listener.uptime + "</td><td>" + listener.status + "</td></tr>");
-        });
-        $("#emitters_list").empty()
-        var emitters = data.Emitters;
-        $.each(emitters, function(i, emitter){
-          $("#emitters_list").append("<tr><td>" + emitter.name + "</td><td>" + emitter.uptime + "</td><td>" + emitter.status + "</td></tr>");
-        });
+        if(data.Response == "Status")
+        {
+          $("#listeners_list").empty()
+          var listeners = data.Listeners;
+          $.each(listeners, function(i, listener){
+            $("#listeners_list").append("<tr class=\"" + status_to_class(listener.status) + "\"><td>" + listener.name + "</td><td>" + listener.uptime + "</td><td>" + listener.status + "</td><td></td></tr>");
+          });
+          $("#emitters_list").empty()
+          var emitters = data.Emitters;
+          $.each(emitters, function(i, emitter){
+            $("#emitters_list").append("<tr class=\"" + status_to_class(emitter.status) + "\"><td>" + emitter.name + "</td><td>" + emitter.uptime + "</td><td>" + emitter.status + "</td><td></td></tr>");
+          });
+        }
       }
     };
+
+    function status_to_class(status)
+    {
+      if(status == "Running")
+      {
+        return "table-success"
+      }
+      if(status == "Disconnected")
+      {
+        return "table-danger"
+      }
+      if(status == "Ready")
+      {
+        return "table-info"
+      }
+      return "table-primary"
+    }
   </script>
 {% endblock %}
