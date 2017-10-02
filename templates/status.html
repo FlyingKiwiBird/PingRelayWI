@@ -35,12 +35,9 @@
     var ws = new WebSocket("ws://127.0.0.1:8080/")
 
     ws.onopen = function (event) {
-      var message = JSON.stringify({"action":"get status"});
-      ws.send(message);
-      var intervalID = window.setInterval(function(){
-        ws.send(message);
-      }, 1000);
+      on_connect();
     };
+
     ws.onmessage = function (event) {
       var data = JSON.parse(event.data);
       if(data.Status == "OK")
@@ -50,16 +47,55 @@
           $("#listeners_list").empty()
           var listeners = data.Listeners;
           $.each(listeners, function(i, listener){
-            $("#listeners_list").append("<tr class=\"" + status_to_class(listener.status) + "\"><td>" + listener.name + "</td><td>" + listener.uptime + "</td><td>" + listener.status + "</td><td></td></tr>");
+            $("#listeners_list").append("<tr class=\"" + status_to_class(listener.status) + "\"><td>" + listener.name + "</td><td>" + listener.uptime + "</td><td>" + listener.status + "</td><td>" + get_action_buttons(listener) + "</td></tr>");
           });
           $("#emitters_list").empty()
           var emitters = data.Emitters;
           $.each(emitters, function(i, emitter){
-            $("#emitters_list").append("<tr class=\"" + status_to_class(emitter.status) + "\"><td>" + emitter.name + "</td><td>" + emitter.uptime + "</td><td>" + emitter.status + "</td><td></td></tr>");
+            $("#emitters_list").append("<tr class=\"" + status_to_class(emitter.status) + "\"><td>" + emitter.name + "</td><td>" + emitter.uptime + "</td><td>" + emitter.status + "</td><td>" + get_action_buttons(emitter) + "</td></tr>");
+          });
+          $(".btn-disconnect").click(function(){
+            var id = $(this).data("connection");
+            var dc_message = JSON.stringify({"action":"disconnect", "id": id});
+            send(dc_message)
+          });
+          $(".btn-reconnect").click(function(){
+            var id = $(this).data("connection");
+            var re_message = JSON.stringify({"action":"reconnect", "id": id});
+            send(re_message)
           });
         }
       }
     };
+
+    ws.onerror = function(event)
+    {
+      $("#listeners_list").empty()
+      $("#emitters_list").empty()
+    }
+
+    function on_connect()
+    {
+
+      var message = JSON.stringify({"action":"get status"});
+      send(message)
+      var intervalID = window.setInterval(function(){
+        send(message)
+      }, 1000);
+    }
+
+    function send(message)
+    {
+      try {
+        ws.send(message)
+      } catch (e) {
+        $("#listeners_list").empty()
+        $("#emitters_list").empty()
+      } finally {
+
+      }
+    }
+
 
     function status_to_class(status)
     {
@@ -76,6 +112,18 @@
         return "table-info"
       }
       return "table-primary"
+    }
+
+    function get_action_buttons(connection)
+    {
+      var button_html = ""
+      if(connection.status == "Running")
+      {
+        button_html += "<button type=\"button\" class=\"btn btn-danger btn-disconnect\" data-connection=\"" + connection.id + "\">Disconnect</button>"
+      }
+      button_html += "<button type=\"button\" class=\"btn btn-info btn-reconnect\" data-connection=\"" + connection.id + "\">Reconnect</button>"
+
+      return button_html
     }
   </script>
 {% endblock %}
